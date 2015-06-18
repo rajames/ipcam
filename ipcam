@@ -1,0 +1,219 @@
+#! /bin/sh
+# Author: Raul James
+# Date: 18 June 2015
+# Description:
+#               Script to control the Foscam IP Camera using cgi-bin api.
+#               Tested on: Foscam IPCam FI9831P
+[ -z "$1" ] && bash $0 h
+
+
+######## set these options! ########
+####################################
+# cam username
+user=""
+
+# cam password
+pass=""
+
+# cam address or ip, with or without port. 
+# e.g., xxx.xx.xx.xxx:80
+ip=""
+
+# location to save snapshot
+snapfile="~/Pictures/tmp_outimage.jpg"
+####################################
+####################################
+
+addy="http://${ip}/cgi-bin/CGIProxy.fcgi?usr=${user}&pwd=${pass}"
+rtsp_addy="rtsp://${ip}"
+
+arg=$#
+while [ "$arg" -ne "0" ]; do
+
+case "$1" in
+
+#
+# Image Related
+#
+#-------------------------------------------------------------------------------
+get-img-set)
+wget -q -O - "${addy}&cmd=getImageSetting"
+shift; arg=$(($arg - 1));;
+
+reset-img-set)
+wget -q -O - "${addy}&cmd=resetImageSetting"
+shift; arg=$(($arg - 1));;
+
+bright)
+wget -q -O - "${addy}&cmd=setBrightness&brightness=${2}"
+shift; shift; arg=$(($arg - 2));;
+
+hue)
+wget -q -O - "${addy}&cmd=setHue&hue=${2}"
+shift; shift; arg=$(($arg - 2));;
+
+saturation)
+wget -q -O - "${addy}&cmd=setSaturation&saturation=${2}"
+shift; shift; arg=$(($arg - 2));;
+
+sharpness)
+wget -q -O - "${addy}&cmd=setSharpness&sharpness=${2}"
+shift; shift; arg=$(($arg - 2));;
+
+contrast)
+wget -q -O - "${addy}&cmd=setContrast&contrast=${2}"
+shift; shift; arg=$(($arg - 2));;
+
+#
+# Video Stream
+#
+#-------------------------------------------------------------------------------
+
+stream-main)
+vlc "${rtsp_addy}/videoMain" &
+shift; arg=$(($arg - 1));;
+
+stream-sub)
+vlc "${rtsp_addy}/videoSub" &
+shift; arg=$(($arg - 1));;
+
+#
+# Camera Image Manipulation/Functions
+#
+#-------------------------------------------------------------------------------
+snap)
+wget -q -O ${snapfile} "${addy}&cmd=snapPicture2"
+#wget -q -O - "${addy}&cmd=snapPicture"
+shift; arg=$(($arg - 1));;
+
+flip)
+#isFlip=[0,1]
+[ $2 = 0 ] && wget -q -O - "${addy}&cmd=flipVideo&isFlip=0"
+[ $2 = 1 ] && wget -q -O - "${addy}&cmd=flipVideo&isFlip=1"
+shift; shift; arg=$(($arg - 2));;
+
+mirror)
+#isMirror= [0,1]
+[ $2 = 0 ] && wget -q -O - "${addy}&cmd=mirrorVideo&isMirror=0"
+[ $2 = 1 ] && wget -q -O - "${addy}&cmd=mirrorVideo&isMirror=1"
+shift; shift; arg=$(($arg - 2));;
+
+set-pwr-freq)
+# 0 - 60Hz
+# 1 - 50Hz
+[ $2 = 60 ] && wget -q -O - "${addy}&cmd=setPwrFreq&freq=0"
+[ $2 = 50 ] && wget -q -O - "${addy}&cmd=setPwrFreq&freq=1"
+shift; shift; arg=$(($arg - 2));;
+
+#
+# Movements
+#
+#-------------------------------------------------------------------------------
+move)
+[ $2 = r ] && wget -q -O - "${addy}&cmd=ptzMoveRight"
+[ $2 = l ] && wget -q -O - "${addy}&cmd=ptzMoveLeft"
+[ $2 = u ] && wget -q -O - "${addy}&cmd=ptzMoveUp"
+[ $2 = d ] && wget -q -O - "${addy}&cmd=ptzMoveDown"
+[ $2 = tr ] && wget -q -O - "${addy}&cmd=ptzMoveTopRight"
+[ $2 = tl ] && wget -q -O - "${addy}&cmd=ptzMoveTopLeft"
+[ $2 = br ] && wget -q -O - "${addy}&cmd=ptzMoveBottomRight"
+[ $2 = bl ] && wget -q -O - "${addy}&cmd=ptzMoveBottomLeft"
+[ $2 = reset ] && wget -q -O - "${addy}&cmd=ptzReset"
+[ $2 = stop ] && wget -q -O - "${addy}&cmd=ptzStopRun"
+shift; shift; arg=$(($arg - 2));;
+
+set-move-speed)
+# 0 - Very Slow
+# 1 - Slow
+# 2 - Normal
+# 3 - Fast
+# 4 - Very Fast
+[ $2 = vs ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=0"
+[ $2 = s ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=1"
+[ $2 = n ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=2"
+[ $2 = f ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=3"
+[ $2 = vf ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=4"
+shift; shift; arg=$(($arg - 2));;
+
+get-move-speed)
+wget -q -O - "${addy}&cmd=getPTZSpeed"
+shift; arg=$(($arg - 1));;
+
+#
+# Zooming
+#
+#-------------------------------------------------------------------------------
+set-zoom-speed)
+# 0 - Slow
+# 1 - Normal
+# 2 - Fast
+[ $2 = s ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=0"
+[ $2 = n ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=1"
+[ $2 = f ] && wget -q -O - "${addy}&cmd=setPTZSpeed&speed=2"
+shift; shift; arg=$(($arg - 2));;
+
+get-zoom-speed)
+wget -q -O - "${addy}&cmd=getZoomSpeed"
+shift; arg=$(($arg - 1));;
+
+zoom)
+[ $2 = in ] && wget -q -O - "${addy}&cmd=zoomIn"
+[ $2 = out ] && wget -q -O - "${addy}&cmd=zoomOut"
+[ $2 = stop ] && wget -q -O - "${addy}&cmd=zoomStop"
+shift; shift; arg=$(($arg - 2));;
+
+#
+# Cruising
+#
+#-------------------------------------------------------------------------------
+start-cruise)
+[ $2 = vert ] && wget -q -O - "${addy}&cmd=ptzStartCruize&mapName=Vertical"
+[ $2 = horiz ] && wget -q -O - "${addy}&cmd=ptzStartCruize&mapName=Horizontal"
+shift; shift; arg=$(($arg - 2));;
+
+stop-cruise)
+wget -q -O - "${addy}&cmd=ptzStopCruize&"
+shift; arg=$(($arg - 1));;
+
+#
+# General
+#
+#-------------------------------------------------------------------------------
+
+reboot)
+wget -q -O - "${addy}/reboot.cgi"
+shift; arg=$(($arg - 1));;
+
+sleep|wait|pause|p|s|w)
+sleep $2
+shift; shift; arg=$(($arg - 2));;
+
+
+h|-h|help|--help|*)
+echo "sleep|wait|pause|p|s|w- requires argument- will pause script for X seconds.
+bright (0-100)- must specify number 0-100
+contrast (0-100)- must specify number 0-100
+flip (0,1) - flip the image
+get-img-set - get image settings
+get-move-speed - get the speed the camera moves
+get-zoom-speed - get the speed the camera zooms
+hue (0-100)- must specify number 0-100
+mirror (0,1) - mirror the image
+move (u,d,l,r,tr,tl,br,bl,stop,reset) - starts movement, up,down,left,right,top right,top left,bottom right,bottom left, stop, reset
+reboot- reboots cam
+reset-img-set - reset image settings
+saturation (0-100)- must specify number 0-100
+set-pwr-freq (50,60) - set power frequency in Hz
+set-move-speed (vs,s,n,f,vf) - the speed the camera moves. very slow, slow, normal, fast, very fast
+set-zoom-speed (s,n,f) - the speed the camera zooms. slow, normal, fast
+sharpness (0-100)- must specify number 0-100
+snap- save snapshot to local file "${snapfile}"
+start-cruise (vert,horiz) - start a predefined cruise (vertical, horizontal)
+stop-cruise (vert,horiz) - stop cruise
+stream-main - open mainVideo stream
+stream-sub - open subVideo stream
+zoom (in,out,stop) - camera zoom"
+shift; arg=$(($arg - 1));;
+
+esac
+done
