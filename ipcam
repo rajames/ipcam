@@ -181,7 +181,7 @@ shift; arg=$(($arg - 1));;
 #-------------------------------------------------------------------------------
 
 reboot)
-wget -q -O - "${addy}/reboot.cgi"
+wget -q -O - "${addy}&cmd=rebootSystem"
 shift; arg=$(($arg - 1));;
 
 sleep|wait|pause|p|s|w)
